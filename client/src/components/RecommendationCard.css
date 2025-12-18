@@ -1,0 +1,133 @@
+.recommendation-card {
+  background: var(--surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.34);
+}
+
+.recommendation-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    700px 220px at 18% 0%,
+    rgba(138, 43, 226, 0.18),
+    transparent 60%
+  );
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.recommendation-card:hover {
+  transform: perspective(1100px) rotateX(1.2deg) rotateY(2.2deg)
+    translateY(-10px);
+  box-shadow: 0 20px 52px rgba(229, 9, 20, 0.16),
+    0 16px 36px rgba(0, 0, 0, 0.45);
+  border-color: var(--primary);
+}
+
+.recommendation-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--primary);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  width: fit-content;
+}
+
+.badge-icon {
+  font-size: 1.2rem;
+}
+
+.rec-poster-container {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.rec-poster {
+  width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  transform: translateZ(16px);
+}
+
+.rec-no-poster {
+  width: 100%;
+  aspect-ratio: 2/3;
+  background: var(--secondary);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  opacity: 0.3;
+}
+
+.rec-info {
+  padding: 0.5rem 0;
+}
+
+.rec-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+  color: var(--text-primary);
+}
+
+.rec-year {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.rec-connection {
+  font-size: 0.9rem;
+  color: var(--primary);
+  font-weight: 600;
+  margin-bottom: 0.8rem;
+}
+
+.rec-rating {
+  display: inline-block;
+  background: rgba(70, 211, 105, 0.2);
+  color: var(--success);
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.rec-insight {
+  background: rgba(138, 43, 226, 0.1);
+  border-left: 2px solid #8a2be2;
+  padding: 0.8rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.rec-overview {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
