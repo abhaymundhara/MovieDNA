@@ -34,13 +34,13 @@ function App() {
     setError(null);
     setResult(null);
 
-          <a
-            className="github-pill"
-            href={`https://github.com/${REPO_SLUG}`}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="View project on GitHub"
-          >
+    try {
+      const response = await fetch("/api/movie-dna", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ movieTitle }),
       });
 
       if (!response.ok) {
@@ -48,9 +48,7 @@ function App() {
       }
 
       const data = await response.json();
-            <span className="github-stars" aria-live="polite">
-              ★ {starCount !== null ? starCount.toLocaleString() : "—"}
-            </span>
+      setResult(data);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -68,7 +66,7 @@ function App() {
         <div className="header-inner">
           <a
             className="github-pill"
-            href="https://github.com/"
+            href={`https://github.com/${REPO_SLUG}`}
             target="_blank"
             rel="noreferrer"
             aria-label="View project on GitHub"
@@ -85,8 +83,8 @@ function App() {
             </span>
             <span className="github-text">GitHub</span>
             <span className="pill-divider" aria-hidden="true" />
-            <span className="github-stars" aria-hidden="true">
-              ★ 1
+            <span className="github-stars" aria-live="polite">
+              ★ {starCount !== null ? starCount.toLocaleString() : "—"}
             </span>
           </a>
           <h1 className="title">
