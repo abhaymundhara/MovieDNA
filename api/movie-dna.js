@@ -6,13 +6,30 @@ const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
 
 async function searchMovie(title) {
-  const res = await fetch(
-    `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(
-      title
-    )}`
-  );
+  const url = `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(
+    title
+  )}`;
+
+  console.log("Searching TMDB for:", title);
+
+  const res = await fetch(url);
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    console.error("TMDB API error:", res.status, errorText);
+    throw new Error(`TMDB API error: ${res.status} - ${errorText}`);
+  }
+
   const data = await res.json();
-  if (!data.results?.length) throw new Error(`Movie "${title}" not found`);
+  console.log("TMDB search response:", JSON.stringify(data).substring(0, 200));
+
+  if (!data.results?.length) {
+    if (data.status_message) {
+      throw new Error(`TMDB Error: ${data.status_message}`);
+    }
+    throw new Error(`Movie "${title}" not found`);
+  }
+
   return data.results[0];
 }
 
@@ -20,6 +37,13 @@ async function getMovieDetails(id) {
   const res = await fetch(
     `${TMDB_BASE_URL}/movie/${id}?api_key=${TMDB_API_KEY}&append_to_response=credits`
   );
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    console.error("TMDB details error:", res.status, errorText);
+    throw new Error(`Failed to get movie details: ${res.status}`);
+  }
+
   return res.json();
 }
 
@@ -148,11 +172,15 @@ export default async function handler(req, res) {
 
   if (req.method !== "POST") return res.status(405).end();
 
+  console.log("API Keys status:", {
+    hasTMDB: !!TMDB_API_KEY,
+    hasGroq: !!GROQ_API_KEY,
+    tmdbKeyLength: TMDB_API_KEY?.length,
+    groqKeyLength: GROQ_API_KEY?.length,
+  });
+
   if (!TMDB_API_KEY || !GROQ_API_KEY) {
-    console.error("Missing API keys:", {
-      hasTMDB: !!TMDB_API_KEY,
-      hasGroq: !!GROQ_API_KEY,
-    });
+    console.error("Missing API keys");
     return res.status(500).json({
       error:
         "Missing API keys - please configure environment variables in Vercel",
