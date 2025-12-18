@@ -116,7 +116,16 @@ Provide a brief, engaging 2-3 sentence analysis of what makes this movie's creat
 }
 
 async function generateInsight(originalTitle, recTitle, reason, name) {
-  const prompt = `You recommend "${recTitle}" to fans of "${originalTitle}" because of shared ${reason} (${name}). In 1 short sentence, explain the connection clearly.`;
+  let prompt;
+
+  if (reason === "similar theme and story") {
+    // Special prompt for TMDB similar movies
+    prompt = `Explain in 1 concise sentence why fans of "${originalTitle}" would enjoy "${recTitle}", focusing on shared themes, storytelling style, or audience appeal.`;
+  } else {
+    // Original prompt for person-based recommendations
+    prompt = `You recommend "${recTitle}" to fans of "${originalTitle}" because of shared ${reason} (${name}). In 1 short sentence, explain the connection clearly.`;
+  }
+
   const completion = await groq.chat.completions.create({
     messages: [{ role: "user", content: prompt }],
     model: "llama-3.3-70b-versatile",
@@ -230,9 +239,32 @@ export default async function handler(req, res) {
         getMoviesByGenre(details.genres, details.id, 3),
       ]);
 
+    // Filter out movies before 2000 if the original movie is from 2000 or later
+    const originalYear = details.release_date
+      ? new Date(details.release_date).getFullYear()
+      : null;
+    const shouldFilterOldMovies = originalYear && originalYear >= 2000;
+
+    const filterByYear = (movies) => {
+      if (!shouldFilterOldMovies) return movies;
+      return movies.filter((m) => {
+        const year = m.release_date
+          ? new Date(m.release_date).getFullYear()
+          : null;
+        return year && year >= 2000;
+      });
+    };
+
+    // Apply year filter to all recommendation categories
+    const filteredDirectorRecs = filterByYear(directorRecs);
+    const filteredActorRecs = filterByYear(actorRecs);
+    const filteredWriterRecs = filterByYear(writerRecs);
+    const filteredSimilarRecs = filterByYear(similarRecs);
+    const filteredGenreRecs = filterByYear(genreRecs);
+
     // Add insights
     const directorWithInsight = await Promise.all(
-      directorRecs.map(async (m) => ({
+      filteredDirectorRecs.map(async (m) => ({
         movie: m,
         name: director.name,
         insight: await generateInsight(
@@ -244,7 +276,7 @@ export default async function handler(req, res) {
       }))
     );
     const actorWithInsight = await Promise.all(
-      actorRecs.map(async (m) => ({
+      filteredActorRecs.map(async (m) => ({
         movie: m,
         name: leadActor.name,
         insight: await generateInsight(
@@ -256,7 +288,7 @@ export default async function handler(req, res) {
       }))
     );
     const writerWithInsight = await Promise.all(
-      writerRecs.map(async (m) => ({
+      filteredWriterRecs.map(async (m) => ({
         movie: m,
         name: screenwriter.name,
         insight: await generateInsight(
@@ -267,20 +299,32 @@ export default async function handler(req, res) {
         ),
       }))
     );
-    const similarWithInsight = await Promise.all(
-      similarRecs.map(async (m) => ({
-        movie: m,
-        insight: await generateInsight(
-          details.title,
-          m.title,
-          "similar theme and story",
-          "TMDB algorithm"
-        ),
-      }))
-    );
+
+    // Filter out similar movies where AI detects no connection
+    const validSimilarWithInsight = (
+      await Promise.all(
+        filteredSimilarRecs.map(async (m) => {
+          const insight = await generateInsight(
+            details.title,
+            m.title,
+            "similar theme and story",
+            "TMDB algorithm"
+          );
+          return { movie: m, insight };
+        })
+      )
+    ).filter((item) => {
+      // Filter out recommendations where AI says "no connection" or similar
+      const noConnection =
+        /no connection|not related|vastly different|unrelated|not similar/i.test(
+          item.insight
+        );
+      return !noConnection;
+    });
+
     const genreNames = details.genres?.map((g) => g.name).join(", ") || "";
     const genreWithInsight = await Promise.all(
-      genreRecs.map(async (m) => ({
+      filteredGenreRecs.map(async (m) => ({
         movie: m,
         name: genreNames,
         insight: await generateInsight(
@@ -293,7 +337,7 @@ export default async function handler(req, res) {
     );
 
     const recommendations = buildRecommendations(
-      { similar: similarWithInsight },
+      { similar: validSimilarWithInsight },
       directorWithInsight,
       actorWithInsight,
       writerWithInsight,
