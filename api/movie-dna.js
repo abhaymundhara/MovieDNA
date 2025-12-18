@@ -137,10 +137,26 @@ function buildRecommendations(original, director, actor, writer, genres) {
 }
 
 export default async function handler(req, res) {
+  // Enable CORS for Vercel
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
   if (req.method !== "POST") return res.status(405).end();
 
   if (!TMDB_API_KEY || !GROQ_API_KEY) {
-    return res.status(500).json({ error: "Missing API keys" });
+    console.error("Missing API keys:", {
+      hasTMDB: !!TMDB_API_KEY,
+      hasGroq: !!GROQ_API_KEY,
+    });
+    return res.status(500).json({
+      error:
+        "Missing API keys - please configure environment variables in Vercel",
+    });
   }
 
   const { movieTitle } = req.body || {};
@@ -261,7 +277,14 @@ export default async function handler(req, res) {
 
     res.status(200).json(response);
   } catch (err) {
-    console.error("Error analyzing movie DNA:", err);
-    res.status(500).json({ error: err.message || "Server error" });
+    console.error("Error analyzing movie DNA:", {
+      message: err.message,
+      stack: err.stack,
+      movieTitle: req.body?.movieTitle,
+    });
+    res.status(500).json({
+      error: err.message || "Server error",
+      details: process.env.NODE_ENV === "development" ? err.stack : undefined,
+    });
   }
 }

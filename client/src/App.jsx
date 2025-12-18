@@ -6,7 +6,7 @@ import RecommendationCard from "./components/RecommendationCard";
 import LoadingSpinner from "./components/LoadingSpinner";
 import DnaBackground from "./components/DnaBackground";
 
-const REPO_SLUG = "owner/repo"; // TODO: replace with your repo, e.g., "abhaymundhara/movie-dna"
+const REPO_SLUG = "abhaymundhara/MovieDNA";
 
 function App() {
   const [loading, setLoading] = useState(false);
