@@ -108,7 +108,7 @@ Provide a brief, engaging 2-3 sentence analysis of what makes this movie's creat
 
   const completion = await groq.chat.completions.create({
     messages: [{ role: "user", content: prompt }],
-    model: "llama-3.1-70b-versatile",
+    model: "llama-3.3-70b-versatile",
     temperature: 0.7,
     max_tokens: 200,
   });
@@ -119,7 +119,7 @@ async function generateInsight(originalTitle, recTitle, reason, name) {
   const prompt = `You recommend "${recTitle}" to fans of "${originalTitle}" because of shared ${reason} (${name}). In 1 short sentence, explain the connection clearly.`;
   const completion = await groq.chat.completions.create({
     messages: [{ role: "user", content: prompt }],
-    model: "llama-3.1-8b-instant",
+    model: "llama-3.3-70b-versatile",
     temperature: 0.6,
     max_tokens: 60,
   });
@@ -184,6 +184,14 @@ export default async function handler(req, res) {
     return res.status(500).json({
       error:
         "Missing API keys - please configure environment variables in Vercel",
+    });
+  }
+
+  // Validate TMDB API key format (should be 32 chars for v3)
+  if (TMDB_API_KEY.length !== 32) {
+    console.error("Invalid TMDB API key length:", TMDB_API_KEY.length);
+    return res.status(500).json({
+      error: `Invalid TMDB API key format. Expected 32 characters, got ${TMDB_API_KEY.length}. Please use the API Key (v3 auth) from TMDB settings.`,
     });
   }
 
